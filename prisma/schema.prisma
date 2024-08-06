@@ -1,0 +1,40 @@
+// This section specifies the generator for Prisma Client
+generator client {
+    provider = "prisma-client-js" // Indicates that the client will use Prisma's JavaScript/TypeScript client
+}
+
+// This section specifies the datasource configuration
+datasource db {
+    provider = "mongodb" // Specifies that the datasource is MongoDB
+    url      = env("DATABASE_URL") // The URL for connecting to the database, read from an environment variable
+}
+
+// Defines the User model
+model User {
+    id               String      @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier for the user, mapped to MongoDB ObjectId
+    name             String? // Optional field for the user's name
+    email            String      @unique // Email address, must be unique
+    image            String? // Optional field for the user's image URL
+    bookedVisits     Json[] // Array of JSON objects representing booked visits
+    favResidenciesID String[]    @db.ObjectId // Array of ObjectIds representing favorite residencies
+    ownedResidencies Residency[] @relation("Owner") // Array of residencies owned by the user, establishing a relation with the Residency model
+}
+
+// Defines the Residency model
+model Residency {
+    id          String   @id @default(auto()) @map("_id") @db.ObjectId // Unique identifier for the residency, mapped to MongoDB ObjectId
+    title       String // Title of the residency
+    description String // Description of the residency
+    price       Int // Price of the residency
+    address     String // Address of the residency
+    city        String // City where the residency is located
+    country     String // Country where the residency is located
+    image       String // URL of the residency's image
+    facilities  Json // JSON object representing the facilities available at the residency
+    userEmail   String // Email of the user who owns the residency
+    owner       User     @relation("Owner", fields: [userEmail], references: [email]) // Relation to the User model, using userEmail to link to the user's email
+    createdAt   DateTime @default(now()) // Timestamp for when the residency was created, defaults to the current time
+    updatedAt   DateTime @updatedAt // Timestamp for when the residency was last updated, automatically set on update
+
+    @@unique(fields: [address, userEmail]) // Composite unique constraint on address and userEmail
+}
